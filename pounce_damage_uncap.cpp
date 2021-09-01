@@ -73,14 +73,14 @@ const char c_sPattern[] = "\xF3\x0F\x10\x1D\x2A\x2A\x2A\x2A\xF3\x0F\x59\xC0\xF3\
 #define  _MinRangeAddrOffset 4
 
 //comiss  xmm0, ds:fl_1000
-// 88 bytes from sig is this instruction.
-// address operand is 3 bytes into that instruction = 91 bytes.
-#define _MaxRangeAddrOffset 91
+// 76 bytes from sig is this instruction.
+// address operand is 3 bytes into that instruction = 79 bytes.
+#define _MaxRangeAddrOffset 79
 
 //mulss   xmm0, ds:fl_1_div_700
-// 123 bytes from the sig
-// address operand is 4 bytes into that instruction = 127 bytes.
-#define _RangeScaleFactorAddrOffset 127
+// 119 bytes from the sig
+// address operand is 4 bytes into that instruction = 123 bytes.
+#define _RangeScaleFactorAddrOffset 123
 
 #elif SH_SYS == SH_SYS_LINUX
 // This segment we search for is the start of the first instruction that loads 300.0f into memory. 
@@ -88,27 +88,27 @@ const char c_sPattern[] = "\xF3\x0F\x10\x1D\x2A\x2A\x2A\x2A\xF3\x0F\x59\xC0\xF3\
 // comiss  xmm0, ds:flt_BAA9BC (masked)
 // jbe     loc_95EF20
 // movss   xmm1, [ebp+var_19C] (only the instruction)
-// 0F 2F 05 ? ? ? ? 0F 86 90 02 00 00 F3 0F 10
-const char c_sPattern[] = "\x0F\x2F\x05\x2A\x2A\x2A\x2A\x0F\x86\x90\x02\x00\x00\xF3\x0F\x10";
+// 0F 2F 05 ? ? ? ? 0F 86 8A 02 00 00 A1 BC
+const char c_sPattern[] = "\x0F\x2F\x05\x2A\x2A\x2A\x2A\x0F\x86\x8A\x02\x00\x00\xA1\xBC";
 
 //comiss  xmm0, ds:fl_300
 // instruction starts at sig start, addr is 3 bytes into instruction
 #define _MinRangeAddrOffset 3
 
 //comiss  xmm1, ds:fl_1000
-// 26 bytes from sig is this instruction
-// address operand is 3 bytes into that instruction = 29 bytes
-#define _MaxRangeAddrOffset 29
+// 18 bytes from sig is this instruction
+// address operand is 3 bytes into that instruction = 21 bytes
+#define _MaxRangeAddrOffset 21
 
 //mulss   xmm0, ds:fl_1_div_700
-// 40 bytes from sig is this instruction
-// address operand is 4 bytes into that instruction = 44 bytes
-#define _RangeScaleFactorAddrOffset 44
+// 1767 bytes from sig is this instruction
+// address operand is 4 bytes into that instruction = 1771 bytes
+#define _RangeScaleFactorAddrOffset 1771
 
-//addss   xmm0, ds:fl_neg_300
-// 64 bytes from sig is this instruction
-// address operand is 4 bytes into that instruction = 68 bytes
-#define _NegativeMinRangeAddrOffset 68
+//movss   xmm1, ds:fl_neg_300
+// 1778 bytes from sig is this instruction
+// address operand is 4 bytes into that instruction = 1782 bytes
+#define _NegativeMinRangeAddrOffset 1782
 
 #endif
 
@@ -144,7 +144,7 @@ bool PounceDamageUncap::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 	PLUGIN_SAVEVARS();
 
 	GET_V_IFACE_ANY(GetServerFactory, server, IServerGameDLL, INTERFACEVERSION_SERVERGAMEDLL);
-	GET_V_IFACE_ANY(GetEngineFactory, g_pCVar, ICvar, CVAR_INTERFACE_VERSION);
+	GET_V_IFACE_CURRENT(GetEngineFactory, g_pCVar, ICvar, CVAR_INTERFACE_VERSION);
 
 	if(!PatchPounceVars(server))
 	{
@@ -217,13 +217,16 @@ bool PatchPounceVars(void * pServerDll)
 void UnPatchPounceVars()
 {
 	char *pAddr = pPatchBaseAddr;
-	
+	if(pAddr == NULL)
+	{
+		return;
+	}
 	// Revert the address reads to their original address values
 
 	// Unpatch minrange
 	float ** pPatchAddr = (float**)(pAddr + _MinRangeAddrOffset);
 	*pPatchAddr=g_pMinRangeData;
-	
+
 	pPatchAddr = (float**)(pAddr + _MaxRangeAddrOffset);
 	*pPatchAddr=g_pMaxRangeData;
 
